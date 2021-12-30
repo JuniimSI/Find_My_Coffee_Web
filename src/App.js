@@ -25,7 +25,6 @@ function App() {
   async function setCurrentLocation() {
     try {
       await navigator.geolocation.getCurrentPosition(function (position) {
-        console.log(position)
         setLatitude(position.coords.latitude);
         setLongitude(position.coords.longitude);
         loadCoffeShops();
@@ -67,11 +66,10 @@ function App() {
         />
         {
           (latitude != 0 && longitude != 0) &&
-          <NearstCoffees latitude={latitude} longitude={longitude} />
+          <NearstCoffees setSelected={setSelected} latitude={latitude} longitude={longitude} />
         }
         </GoogleMap>
       </LoadScript>
-      
     </Fragment>
   );
 }

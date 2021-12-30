@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import StoreService from '../../services/store';
+import EstablishmentService from '../../services/establishment_service';
 
 import styled from 'styled-components';
 import ReactStars from "react-rating-stars-component";
@@ -54,8 +55,17 @@ const NearstCoffees = (props) => {
   }, [props.latitude]);
 
   async function loadNearstStores() {
-       const response = await StoreService.index(props.latitude, props.longitude);
-       setStores(response.data);
+    const response = await StoreService.index(props.latitude, props.longitude);
+    setStores(response.data);
+  }
+
+  async function getEstablishmentInformations(place_id) {
+    try {
+      const response = await EstablishmentService.show(place_id);
+      props.setSelected(response.data.result);
+    } catch (error) {
+      props.setSelected([]);
+    }
   }
 
   return (
@@ -70,7 +80,9 @@ const NearstCoffees = (props) => {
       {
          stores.map(store => {
            return (
-             <EstablishmentItem key={store.name}>
+             <EstablishmentItem key={store.name}
+                                onClick={() => getEstablishmentInformations(store.google_place_id)}
+             >
                <Title>{store.name}</Title>
 
                <Paragraph>
