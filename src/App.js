@@ -1,24 +1,61 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { Fragment, useState, useEffect } from 'react';
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import EstablishmentService from './services/google_list_of_establishments';
 
 function App() {
+  const { REACT_APP_GOOGLE_KEY } = process.env;
+  const [latitude, setLatitude] = useState(0);
+  const [longitude, setLongitude] = useState(0);
+  const [locations, setLocations] = useState([]);
+
+  useEffect(() => {
+    setCurrentLocation();
+  }, []);
+
+  useEffect(() => {
+    setCurrentLocation();
+  }, [longitude]);
+
+  async function setCurrentLocation() {
+    try {
+      await navigator.geolocation.getCurrentPosition(function (position) {
+        setLatitude(position.coords.latitude);
+        setLongitude(position.coords.longitude);
+        loadCoffeShops();
+      });
+    } catch (error) {
+      alert('Habilite a localização para utilizar o aplicativo!');
+    }
+  }
+
+  async function loadCoffeShops() {
+    const response = await EstablishmentService.index(latitude, longitude);
+    setLocations(response.data.results);
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+    <Fragment>
+      <LoadScript googleMapsApiKey={REACT_APP_GOOGLE_KEY}>
+        <GoogleMap mapContainerStyle={{height:"100vh", width:"100%"}}
+                   zoom={15}
+                   center={{lat: latitude, lng: longitude}}
         >
-          Learn React
-        </a>
-      </header>
-    </div>
+        {
+          locations.map((item, index) => {
+            return(
+              <Marker key={index} icon='/images/coffee-pin.png' title={item.name} animation='4' 
+                position={{lat: item.geometry.location.lat, lng: item.geometry.location.lng}}
+              />
+            )
+          })
+        }
+        <Marker key="my_location" icon='/images/my-location-pin.png' title='Seu local' animation='2' 
+          position={{lat: latitude, lng: longitude}}
+        />
+
+        </GoogleMap>
+      </LoadScript>
+    </Fragment>
   );
 }
 
