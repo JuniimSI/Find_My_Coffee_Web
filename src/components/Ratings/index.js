@@ -1,90 +1,51 @@
 import React, { Fragment, useEffect, useState } from 'react';
-import ReactStars from 'react-rating-stars-component';
-import RatingService from '../../services/ratings';
-import styled from 'styled-components';
-
-
-const NewRating = styled.div`
- padding-bottom: 50px;
-`
-
-const Input = styled.input`
- margin-bottom: 10px;
- height: 20px;
- width: 90%;
- border-width: 0;
-`
-const TextArea = styled.textarea`
- margin-bottom: 10px;
- height: 40px;
- width: 90%;
- border-width: 0;
-`
-
-const Button = styled.button`
- color: white;
- background-color: #a5572f;
- width: 90px;
- height: 30px;
- margin-top: 10px;
- border-color: #a5572f;
- font-weight: 800;
-`
+import Form from './Form';
+import StoreService from '../../services/store.js';
+import ReactStars from "react-rating-stars-component";
 
 const Ratings = (props) => {
-  const [name, setName] = useState('');
-  const [message, setMessage] = useState('');
-  const [value, setValue] = useState(1);
-  
-  async function handleSubmit(e) {
-    e.preventDefault();
+  const [store, setStore] = useState([]);
 
-    const store_params = {
-      latitude: props.place.geometry.location.lat,
-      longitude: props.place.geometry.location.lng,
-      name: props.place.name,
-      address: props.place.formatted_address,
-      google_place_id: props.place.place_id
-   }
+   useEffect(() => {
+     loadStore();
+  }, [props.place]);
 
-    const rating_params = {
-      value: (value == null) ? 1 : value,
-      opinion: message,
-      user_name: name
-   }
-
-    await RatingService.create(store_params, rating_params);
-    
-    //props.loadStore()
-
-    setName('');
-    setMessage('');
+   async function loadStore() {
+     setStore([]);
+     try {
+       const response = await StoreService.show(props.place.place_id);
+       setStore(response.data);
+    } catch (error) {
+       setStore([]);
+    }
   }
 
   return (
     <Fragment>
-      <NewRating>
-        <h4>Deixe sua Opinião</h4>
-
-        <form onSubmit={handleSubmit}>
-          <Input name="name"
-            type="text"
-            className="input"
-            placeholder="Seu primeiro nome"
-            onChange={(e) => setName(e.target.value)}
-            value={name} />
-          <TextArea name="message"
-            className="textarea"
-            placeholder="Sua opinião"
-            onChange={(e) => setMessage(e.target.value)}
-            value={message}></TextArea>
-          <div>
-            <ReactStars count={5} value={value} size={24} activeColor="#ffd700"
-              onChange={(newValue) => { setValue(newValue); }} />
-            <Button type="submit" className="button is-danger">Enviar</Button>
-          </div>
-        </form>
-      </NewRating>
+      <h4>
+        { store.ratings_count || 0 } Opiniões
+        { store.ratings_average && <ReactStars edit={false} value={store.ratings_average || 0} /> }
+      </h4>
+      <hr />
+      {
+        store.ratings &&
+        <div>
+          {
+            store.ratings.map((rating, index) => {
+              return (
+                <div key={index}>
+                  <strong>{rating.user_name}</strong>
+                  <ReactStars edit={false} value={rating.value} />
+                  <p>{rating.opinion}</p>
+                  <p>{rating.date}</p>
+                  <hr />
+                </div>
+              )
+            })
+          }
+       </div>
+      }
+      <Form place={props.place} loadStore={loadStore}/>
     </Fragment>
   )
 }

@@ -1,8 +1,10 @@
 import React, { Fragment, useState, useEffect } from 'react';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import EstablishmentService from './services/establishment_service';
+import StoreService from './services/store.js';
 
 import Establishment from './components/Establishment';
+import NearstCoffees from './components/NearstCoffees';
 
 function App() {
   const { REACT_APP_GOOGLE_KEY } = process.env;
@@ -63,9 +65,13 @@ function App() {
         <Marker key="my_location" icon='/images/my-location-pin.png' title='Seu local' animation='2' 
           position={{lat: latitude, lng: longitude}}
         />
-
+        {
+          (latitude != 0 && longitude != 0) &&
+          <NearstCoffees latitude={latitude} longitude={longitude} />
+        }
         </GoogleMap>
       </LoadScript>
+      
     </Fragment>
   );
 }
