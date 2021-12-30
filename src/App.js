@@ -1,12 +1,16 @@
 import React, { Fragment, useState, useEffect } from 'react';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
-import EstablishmentService from './services/google_list_of_establishments';
+import EstablishmentService from './services/establishment_service';
+
+import Establishment from './components/Establishment';
 
 function App() {
   const { REACT_APP_GOOGLE_KEY } = process.env;
+
   const [latitude, setLatitude] = useState(0);
   const [longitude, setLongitude] = useState(0);
   const [locations, setLocations] = useState([]);
+  const [selected, setSelected] = useState({});
 
   useEffect(() => {
     setCurrentLocation();
@@ -19,6 +23,7 @@ function App() {
   async function setCurrentLocation() {
     try {
       await navigator.geolocation.getCurrentPosition(function (position) {
+        console.log(position)
         setLatitude(position.coords.latitude);
         setLongitude(position.coords.longitude);
         loadCoffeShops();
@@ -38,16 +43,22 @@ function App() {
       <LoadScript googleMapsApiKey={REACT_APP_GOOGLE_KEY}>
         <GoogleMap mapContainerStyle={{height:"100vh", width:"100%"}}
                    zoom={15}
-                   center={{lat: latitude, lng: longitude}}
+                   center={(selected.geometry) ? undefined : { lat: latitude, lng: longitude }}
         >
         {
           locations.map((item, index) => {
             return(
               <Marker key={index} icon='/images/coffee-pin.png' title={item.name} animation='4' 
                 position={{lat: item.geometry.location.lat, lng: item.geometry.location.lng}}
+                onClick={() => setSelected(item)}
               />
             )
           })
+        }
+        {
+           selected.place_id && (
+             <Establishment place={selected} />
+          )
         }
         <Marker key="my_location" icon='/images/my-location-pin.png' title='Seu local' animation='2' 
           position={{lat: latitude, lng: longitude}}
